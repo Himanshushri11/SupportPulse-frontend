@@ -1,13 +1,15 @@
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 
-const API_BASE_URL = '/api';
+export { API_BASE_URL };
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000,
+  withCredentials: true,
+  timeout: 25000, // 25s timeout to accommodate Render cold starts
 });
 
 // Request interceptor to attach access token
@@ -71,9 +73,15 @@ apiClient.interceptors.response.use(
       }
 
       try {
-        const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-          refreshToken,
-        });
+        const { data } = await axios.post(
+          `${API_BASE_URL}/auth/refresh`,
+          { refreshToken },
+          {
+            headers: { 'Content-Type': 'application/json' },
+            withCredentials: true,
+            timeout: 20000,
+          }
+        );
 
         const newAccessToken = data.data.accessToken;
         const newRefreshToken = data.data.refreshToken;

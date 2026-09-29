@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ticketsApi } from '../../api/tickets';
 import { Navbar } from '../../components/layout/Navbar';
 import { io } from 'socket.io-client';
+import { SOCKET_URL } from '../../api/config';
 import {
   Ticket,
   Clock,
@@ -111,7 +112,13 @@ export const AdminDashboard = () => {
 
   // NEW: Real-time new-ticket notifications via Socket.IO
   useEffect(() => {
-    const socket = io(import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000');
+    const socket = io(SOCKET_URL, {
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
     socketRef.current = socket;
 
     socket.emit('join-admin-room');
@@ -127,7 +134,7 @@ export const AdminDashboard = () => {
     });
 
     socket.on('connect_error', () => {
-      // Silent fail — real-time is a nice-to-have, not critical path
+      // Silent fail — real-time is an enhancement, not critical path
     });
 
     return () => {
